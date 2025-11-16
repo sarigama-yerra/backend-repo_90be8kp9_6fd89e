@@ -1,48 +1,80 @@
 """
-Database Schemas
+Database Schemas for Bilal Qori – Trainer Soulful Qur’an Platform
 
-Define your MongoDB collection schemas here using Pydantic models.
-These schemas are used for data validation in your application.
-
-Each Pydantic model represents a collection in your database.
-Model name is converted to lowercase for the collection name:
-- User -> "user" collection
-- Product -> "product" collection
-- BlogPost -> "blogs" collection
+Each Pydantic model below maps to a MongoDB collection (lowercased class name).
 """
+from pydantic import BaseModel, Field, EmailStr
+from typing import Optional, List
+from datetime import datetime
 
-from pydantic import BaseModel, Field
-from typing import Optional
-
-# Example schemas (replace with your own):
 
 class User(BaseModel):
-    """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
-    """
     name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
+    email: EmailStr = Field(..., description="Email address")
+    phone: Optional[str] = Field(None, description="Phone / WhatsApp number")
+    role: str = Field("student", description="user | student | admin | partner")
+    is_active: bool = Field(True)
+
 
 class Product(BaseModel):
-    """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
-    """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
+    title: str
+    description: Optional[str] = None
+    price: float = Field(..., ge=0)
+    category: str = Field(..., description="book | ebook | audio | video | merchandise | digital | equipment")
+    image: Optional[str] = None
+    stock: Optional[int] = Field(None, ge=0)
+    rating: Optional[float] = Field(4.9, ge=0, le=5)
 
-# Add your own schemas here:
-# --------------------------------------------------
 
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+class OrderItem(BaseModel):
+    product_id: str
+    title: str
+    qty: int = Field(..., ge=1)
+    price: float = Field(..., ge=0)
+
+
+class Order(BaseModel):
+    user_email: EmailStr
+    items: List[OrderItem]
+    total: float = Field(..., ge=0)
+    payment_status: str = Field("pending")
+    checkout_session_id: Optional[str] = None
+
+
+class Enrollment(BaseModel):
+    name: str
+    email: EmailStr
+    phone: Optional[str] = None
+    program: str = Field(..., description="tilawah | workshop | webinar | membership")
+    schedule: Optional[str] = Field(None, description="preferred time/event id")
+    notes: Optional[str] = None
+
+
+class Testimonial(BaseModel):
+    name: str
+    content: str
+    avatar: Optional[str] = None
+    platform: Optional[str] = Field("student")
+    rating: Optional[int] = Field(5, ge=1, le=5)
+
+
+class MediaItem(BaseModel):
+    title: str
+    type: str = Field(..., description="video | tutorial | reel | tiktok | instagram | youtube")
+    url: str
+    thumbnail: Optional[str] = None
+
+
+class CommunityEvent(BaseModel):
+    title: str
+    date: Optional[datetime] = None
+    location: Optional[str] = None
+    description: Optional[str] = None
+    gallery: Optional[List[str]] = None
+
+
+class ContactMessage(BaseModel):
+    name: str
+    email: EmailStr
+    message: str
+    phone: Optional[str] = None
